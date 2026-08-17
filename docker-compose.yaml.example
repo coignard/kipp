@@ -1,0 +1,14 @@
+services:
+  kipp:
+    build: .
+    ports:
+      - "2222:2222"
+    volumes:
+      - /srv/kipp/data:/data
+      - /srv/kipp/kipp.toml:/etc/kipp/kipp.toml:ro
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    stop_grace_period: 5s

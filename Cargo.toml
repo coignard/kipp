@@ -1,0 +1,47 @@
+[package]
+name = "kipp"
+version = "0.1.0"
+authors = [
+    "René Coignard <contact@renecoignard.com>"
+]
+edition = "2024"
+rust-version = "1.97"
+license = "GPL-3.0-or-later"
+homepage = "https://github.com/coignard/kipp"
+repository = "https://github.com/coignard/kipp"
+exclude = ["data/*"]
+
+[dependencies]
+anyhow = "1.0.104"
+chacha20poly1305 = "0.11.0"
+ciborium = "0.2.2"
+clap = { version = "4.6.6", features = ["derive", "env"] }
+hkdf = "0.13.0"
+jiff = { version = "0.2.35", features = ["serde"] }
+rand = "0.10.2"
+ratatui = { version = "0.30.2", default-features = false, features = ["crossterm"] }
+russh = "0.62.6"
+serde = { version = "1.0.229", features = ["derive"] }
+sha2 = "0.11.0"
+subtle = "2.6.1"
+tokio = { version = "1.53.1", features = ["rt-multi-thread", "macros", "net", "sync", "time", "signal"] }
+toml = "1.1.4"
+unicode-linebreak = "0.1.5"
+unicode-segmentation = "1.13.3"
+unicode-width = "0.2.2"
+zeroize = { version = "1.9.0", features = ["zeroize_derive"] }
+zstd = "0.13.3"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2.189"
+
+[[bin]]
+name = "kipp"
+path = "src/main.rs"
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+panic = "unwind"
+opt-level = 3

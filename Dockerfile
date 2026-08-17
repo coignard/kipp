@@ -4,7 +4,7 @@ COPY Cargo.toml ./
 COPY src ./src
 RUN cargo build --release
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 RUN useradd --system --uid 10001 --create-home kipp
 COPY --from=build /build/target/release/kipp /usr/local/bin/kipp
 USER kipp

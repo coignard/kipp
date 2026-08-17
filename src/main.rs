@@ -12,7 +12,7 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result, bail};
 use clap::Parser;
-use rand::RngCore;
+use rand::Rng;
 use russh::keys::ssh_key::LineEnding;
 use russh::keys::ssh_key::private::Ed25519Keypair;
 use russh::keys::{PrivateKey, PublicKey};

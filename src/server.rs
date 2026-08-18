@@ -51,8 +51,7 @@ const LEAVE_UI: [&str; 6] = [
     CURSOR_SHOW,
     ALT_SCREEN_OFF,
 ];
-const EVICTED: &str = "\r[session is terminating]\r\n";
-const TIMED_OUT: &str = "\r[session timed out]\r\n";
+const TERMINATING: &str = "\r[session is terminating]\r\n";
 const HANDOVER_GRACE: Duration = Duration::from_secs(2);
 const SCROLL_STEP: usize = 3;
 const DEFAULT_SIZE: (u16, u16) = (80, 24);
@@ -399,7 +398,6 @@ async fn run<S: AsyncRead + AsyncWrite + Unpin>(
     let mut composer = Composer::new(zone.clone(), today, layout);
     let mut rows = composer.rows(&sessions, true);
     let mut started: Option<i64> = None;
-    let mut timed_out = false;
 
     handle.data(channel, ENTER_UI.concat()).await.ok();
 
@@ -514,17 +512,14 @@ async fn run<S: AsyncRead + AsyncWrite + Unpin>(
                 }
             }
 
-            _ = tokio::time::sleep_until(deadline) => {
-                timed_out = true;
-                break 'session None;
-            }
+            _ = tokio::time::sleep_until(deadline) => break 'session None,
         }
     };
 
     handle.data(channel, LEAVE_UI.concat()).await.ok();
+    handle.data(channel, TERMINATING.as_bytes()).await.ok();
 
     if let Some(carrier) = evicted {
-        handle.data(channel, EVICTED.as_bytes()).await.ok();
         let (cursor, text) = (editor.cursor(), editor.text().to_owned());
         let _ = carrier.send(Carry {
             text,
@@ -533,8 +528,6 @@ async fn run<S: AsyncRead + AsyncWrite + Unpin>(
             scroll,
         });
     } else {
-        let notice = if timed_out { TIMED_OUT } else { EVICTED };
-        handle.data(channel, notice.as_bytes()).await.ok();
         *ctx.live.lock().await = None;
     }
 

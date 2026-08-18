@@ -58,7 +58,7 @@ pub enum Row {
     Line {
         date: Option<Date>,
         time: Option<String>,
-        who: Option<Who>,
+        who: Who,
         text: String,
     },
     SessionBreak,
@@ -142,21 +142,13 @@ impl Composer {
 
         for (index, range) in text::wrap(body, width).into_iter().enumerate() {
             let content = text::visible(body, &range).to_owned();
-            if index == 0 {
-                rows.push(Row::Line {
-                    date: shown,
-                    time: Some(stamp.clone()),
-                    who: Some(who),
-                    text: content,
-                });
-            } else {
-                rows.push(Row::Line {
-                    date: shown,
-                    time: None,
-                    who: None,
-                    text: content,
-                });
-            }
+            let head = index == 0;
+            rows.push(Row::Line {
+                date: if head { shown } else { None },
+                time: head.then(|| stamp.clone()),
+                who,
+                text: content,
+            });
         }
     }
 
@@ -251,7 +243,7 @@ fn paint(buffer: &mut Buffer, x: u16, y: u16, row: &Row, frame: &Frame<'_>, gutt
             who,
             text,
         } => {
-            let name = who.map(|w| speaker(w, frame));
+            let name = time.is_some().then(|| speaker(*who, frame));
             let prefix = gutter_text(*date, time.as_deref(), name, frame.layout);
             let style = line_style(*who);
             buffer.set_string(x, y, &prefix, style);
@@ -274,7 +266,7 @@ fn paint_input(
     let (cursor_line, cursor_column) = frame.editor.position(width);
 
     let skip = cursor_line.saturating_sub(height.saturating_sub(1) as usize);
-    let style = line_style(Some(frame.who));
+    let style = line_style(frame.who);
 
     for (offset, range) in lines.iter().skip(skip).take(height as usize).enumerate() {
         let index = skip + offset;
@@ -306,10 +298,10 @@ fn speaker<'a>(who: Who, frame: &Frame<'a>) -> &'a str {
     }
 }
 
-fn line_style(who: Option<Who>) -> Style {
+fn line_style(who: Who) -> Style {
     match who {
-        Some(Who::Kipp) => Style::default().fg(Color::Yellow),
-        _ => Style::default(),
+        Who::Kipp => Style::default().fg(Color::Yellow),
+        Who::User => Style::default(),
     }
 }
 
